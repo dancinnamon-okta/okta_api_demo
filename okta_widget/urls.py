@@ -21,16 +21,17 @@ from .views import view_home, view_tokens, view_admin, view_debug
 from .api import list_users, list_user, setNameId, add_users, update_user
 from .api import app_schema, list_groups, list_perms, get_group, update_perm, add_group
 from .views import process_creds
-from .views import view_login, view_logout, view_login_auto, view_profile, edit_profile
+from .views import view_login, view_signin_state, view_logout, view_login_auto, view_profile, edit_profile
 from .views import oauth2_post, oauth2_callback
 from .views import registration_view, registration_view2, \
     registration_success, registration_success2, \
     activation_view, activation_wo_token_view
 from .views import view_login_css, okta_hosted_login, view_login_idp, view_login_disco, login_delegate
 from .views import view_login_custom
+from .views import view_login_proxy, view_okta_proxy
 
 
-# from .views import auth_broker, sessions_broker
+from .views import auth_proxy, sessions_proxy
 # from .views import hellovue
 # from .views import view_login_baybridge, view_login_brooklynbridge
 # from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -48,6 +49,8 @@ urlpatterns = [
     url(r'^login$', view_login, name='login'),
     url(r'^signin/reset-password/(?P<recoveryToken>.*)', view_login, name='reset_password'),
     url(r'^signin/recovery-question/(?P<recoveryToken>.*)', view_login, name='admin_reset_password'),
+    url(r'^signin/(?P<stateToken>.*)', view_signin_state, name='verify_sms'),
+
     url(r'^logout$', view_logout, name='logout'),
     url(r'^login-noprompt', view_login_auto, name='login_noprompt'),
 
@@ -98,12 +101,10 @@ urlpatterns = [
     url(r'^not-authorized/$', not_authorized, name='not_authorized'),
 
     # okta proxy
-    # url(r'^broker/api/v1/sessions/me$', sessions_broker, name='okta_session'),
-    # url(r'^broker/api/v1/authn$', auth_broker, name='okta_auth'),
-
-    # url(r'^login-baybridge$', view_login_baybridge, name='login_baybridge'),
-    # url(r'^login-brooklynbridge$', view_login_brooklynbridge, name='login_brooklynbridge'),
-    # url(r'^hellovue/$', hellovue, name='hellovue'),
+    url(r'^login-proxy$', view_login_proxy, name='login_proxy'),
+    url(r'^login-oktaproxy$', view_okta_proxy, name='login_proxy_backend'),
+    url(r'^proxy/api/v1/sessions/me$', sessions_proxy, name='okta_session'),
+    url(r'^proxy/api/v1/authn$', auth_proxy, name='okta_auth'),
 ]
 
 # urlpatterns += staticfiles_urlpatterns()

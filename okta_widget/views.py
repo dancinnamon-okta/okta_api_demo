@@ -10,7 +10,7 @@ from django.contrib.staticfiles.templatetags.staticfiles import static
 import requests
 
 from .client.oauth2_client import OAuth2Client
-from .client.auth_proxy import AuthClient
+from .client.auth_proxy import AuthClient, SessionsClient
 from .client.users_client import UsersClient
 from .forms import RegistrationForm, RegistrationForm2, TextForm, ActivationForm, ActivationWithEmailForm
 from .authx import *
@@ -181,6 +181,11 @@ def view_login(request, recoveryToken=None):
         c.update({"js": _do_format(request, '/js/oidc_base.js', page)})
     return render(request, 'index.html', c)
 
+@csrf_exempt
+def view_signin_state(request, stateToken=None):
+    c.update({"js": _do_format(request, '/js/oidc_2fa_state.js', state_token=stateToken)})
+    return render(request, 'index.html', c)
+
 
 @csrf_exempt
 def view_login_auto(request):
@@ -237,8 +242,8 @@ def _request_url_root(request):
     return values
 
 
-def _do_format(request, url, key, org_url=BASE_URL, issuer=ISSUER, audience=CLIENT_ID,
-               idps='[]', btns='[]', embed_link=None):
+def _do_format(request, url, key=None, org_url=BASE_URL, issuer=ISSUER, audience=CLIENT_ID,
+               idps='[]', btns='[]', embed_link=None, state_token=None):
     url_map.update({key: url})
 
     list_scopes = ['openid', 'profile', 'email']
@@ -247,7 +252,7 @@ def _do_format(request, url, key, org_url=BASE_URL, issuer=ISSUER, audience=CLIE
     scps = ''.join("'" + s + "', " for s in list_scopes)
     scps = '[' + scps[:-2] + ']'
 
-    if key in pages_js:
+    if key and key in pages_js:
         return pages_js[key]
     else:
         s = requests.session()
@@ -262,6 +267,7 @@ def _do_format(request, url, key, org_url=BASE_URL, issuer=ISSUER, audience=CLIE
             .replace("{", "{{").replace("}", "}}") \
             .replace("[[", "{").replace("]]", "}") \
             .format(org=org_url,
+                    stateToken=state_token,
                     base_org=OKTA_ORG,
                     iss=issuer,
                     aud=audience,
@@ -615,7 +621,6 @@ def oauth2_post(request):
     if code:
         client = OAuth2Client('https://' + OKTA_ORG, CLIENT_ID, CLIENT_SECRET)
         tokens = client.token(code, REDIRECT_URI, ISSUER)
-        print(print('Tokens from the code retrieval {}'.format(tokens)))
         if tokens['access_token']:
             access_token = tokens['access_token']
 
@@ -680,46 +685,79 @@ def process_creds(request):
 #     return render(request, 'z-proxy-callback.html')
 
 
-# @csrf_exempt
-# def auth_broker(request):
-#     print(request)
-#     cookies = request.COOKIES
-#     print('cookie: {}'.format(cookies))
-#
-#     response = HttpResponse()
-#     response.status_code = 200
-#
-#     if request.method == 'POST':
-#         body = json.loads(request.body)
-#         username = body['username']
-#         password = body['password']
-#         auth = AuthClient('https://' + OKTA_ORG)
-#         res = auth.authn(username, password)
-#         print('status={}'.format(res.status_code))
-#         response.status_code = res.status_code
-#
-#         content = json.dumps(res.json())
-#         print('response={}'.format(content))
-#         response.content = content
-#
-#         return response
-#
-#     return response
-#
-#
-# def sessions_broker(request):
-#     print(request)
-#     response = HttpResponse()
-#     response.status_code = 200
-#
-#     cookies = request.COOKIES
-#     print('cookie: {}'.format(cookies))
-#
-#     auth = SessionsClient('https://' + OKTA_ORG)
-#     res = auth.me()
-#     response.status_code = res.status_code
-#     content = json.dumps(res.json())
-#     print('response={}'.format(content))
-#     response.content = content
-#
-#     return response
+def view_login_proxy(request):
+    page = 'login_proxy'
+    pages_js['entry_page'] = page
+    if request.method == 'POST':
+        return _do_refresh(request, page, page)
+    else:
+        c.update({"js": _do_format(request, '/js/oidc_proxy.js', page)})
+    return render(request, 'index_authnproxy.html', c)
+
+
+@csrf_exempt
+def auth_proxy(request):
+    print(request)
+    cookies = request.COOKIES
+    print('cookie: {}'.format(cookies))
+
+    response = HttpResponse()
+    response.status_code = 200
+
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        username = body['username']
+        password = body['password']
+        auth = AuthClient('https://' + OKTA_ORG)
+        res = auth.authn(username, password)
+        print('status={}'.format(res.status_code))
+        response.status_code = res.status_code
+
+        content = json.dumps(res.json())
+        print('response={}'.format(content))
+        response.content = content
+
+        return response
+
+    return response
+
+
+def sessions_proxy(request):
+    print(request)
+    response = HttpResponse()
+    response.status_code = 200
+
+    cookies = request.COOKIES
+    print('cookie: {}'.format(cookies))
+
+    auth = SessionsClient('https://' + OKTA_ORG)
+    res = auth.me()
+    response.status_code = res.status_code
+    content = json.dumps(res.json())
+    print('response={}'.format(content))
+    response.content = content
+
+    return response
+
+
+def view_okta_proxy(request):
+    page = 'login_proxy_backend'
+    pages_js['entry_page'] = page
+    if request.method == 'POST':
+        if 'sessionTokenInput' in request.POST:
+            session_token = request.POST['sessionTokenInput']
+            print('sessionToken={}'.format(session_token))
+            client = OAuth2Client('https://' + OKTA_ORG, CLIENT_ID, CLIENT_SECRET)
+            oauth_params = {
+                "client_id": CLIENT_ID,
+                "redirect_uri": REDIRECT_URI
+            }
+            redirect = client.authorize(session_token, oauth_params, ISSUER)
+            if redirect:
+                code = redirect.split('?')[1].split('&')[0].split('=')[1]
+                return HttpResponseRedirect(reverse('oauth2_post') + '?code={}'.format(code))
+        else:
+            return _do_refresh(request, page, page)
+    else:
+        c.update({"js": _do_format(request, '/js/oidc_proxy_backend.js', page)})
+    return render(request, 'index_oktaproxy.html', c)
