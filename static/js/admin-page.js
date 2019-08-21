@@ -4,21 +4,35 @@ $("#sw").keyup(function(event) {
     }
 });
 
-showToken();
 
-var adminButtonsApp = new Vue({
-    delimiters: ['[[', ']]'],
-    el: '#vueapp-adminbuttons',
-    data: {
-        isCompanyAdmin: navbarApp.isCompanyAdmin
-    }
-});
+var authClient = new OktaAuth({url: 'https://' + base_url});
+var accessToken = '';
+if (srv_access_token != '') {
+    //get the accessToken from session if it exists
+    accessToken = srv_access_token;
+}
+else if (authClient.tokenManager.get('accessToken')) {
+    //get the accessToken stored in local storage
+    accessToken = authClient.tokenManager.get('accessToken').accessToken;
+}
+
+showToken();
 
 var getUsersapp = new Vue({
     delimiters: ['[[', ']]'],
     el: '#vueapp-users',
     data: {
         allUsers: [],
+        isCompanyAdmin: navbarApp.isCompanyAdmin,
+        showDelegateButton: navbarApp.showDelegateButton,
+        orgAccessTokenString: false
+    }
+});
+
+var adminButtonsApp = new Vue({
+    delimiters: ['[[', ']]'],
+    el: '#vueapp-adminbuttons',
+    data: {
         isCompanyAdmin: navbarApp.isCompanyAdmin,
         showDelegateButton: navbarApp.showDelegateButton,
         orgAccessTokenString: false
@@ -81,21 +95,12 @@ var getPermsapp = new Vue({
     },
 });
 
-var authClient = new OktaAuth({url: 'https://{{ org }}'});
-var accessToken = '';
-if (srv_access_token != '') {
-    //get the accessToken from session if it exists
-    accessToken = srv_access_token;
-} else if (authClient.tokenManager.get('accessToken')) {
-    //get the accessToken stored in local storage
-    accessToken = authClient.tokenManager.get('accessToken').accessToken;
-}
-
 var idToken = '';
 if (srv_id_token != '') {
     //get the idToken from session if it exists
     idToken = srv_id_token;
-} else if (authClient.tokenManager.get('idToken')) {
+}
+else if (authClient.tokenManager.get('idToken')) {
     //get the idToken stored in local storage
     idToken = authClient.tokenManager.get('idToken').idToken;
 }
@@ -504,4 +509,6 @@ function getAccessTokenFragment(param) {
     }
     return false;
 }
+
 getUsersapp.orgAccessTokenString = getAccessTokenFragment(window.location.hash);
+adminButtonsApp.orgAccessTokenString = getUsersapp.orgAccessTokenString;

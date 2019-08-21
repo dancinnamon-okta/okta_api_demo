@@ -1,6 +1,7 @@
 from django.conf import settings
 import json
 import base64
+import re
 
 
 # Option: Admin Functions
@@ -26,7 +27,7 @@ def set_id_token(request, id_token):
     if 'profile' not in request.session:
         request.session['profile'] = {}
     request.session['profile'].update(request.session['id_token'])
-    print('id_Token + profile = {}'.format(request.session['profile']))
+    # print('id_Token + profile = {}'.format(request.session['profile']))
 
 
 def get_id_token_json(request):
@@ -51,7 +52,7 @@ def get_access_token_json(request):
 
 
 def get_profile(request):
-    print('returning profile = {}'.format(request.session['profile']))
+    # print('returning profile = {}'.format(request.session['profile']))
     return request.session['profile']
 
 
@@ -59,12 +60,18 @@ def set_profile(request, prof):
     if 'profile' not in request.session:
         request.session['profile'] = {}
     request.session['profile'].update(prof)
-    print('set profile from userinfo = {}'.format(request.session['profile']))
+    # print('set profile from userinfo = {}'.format(request.session['profile']))
 
 
 def logout(request):
     for key in list(request.session.keys()):
-        print('deleting {}'.format(key))
+        if not re.match('^^pages_js_', key) and key not in ('config', 'subdomain'):
+            # print('deleting {}'.format(key))
+            del request.session[key]
+
+
+def logout_all(request):
+    for key in list(request.session.keys()):
         del request.session[key]
 
 def can_xfer_cash(request):
@@ -98,8 +105,8 @@ def _can_delegate(token):
 
 def api_access_admin(bearer_token):
     token = parse_bearer_token(bearer_token)
-    if _can_delegate(token):
-        return True
+    # if _can_delegate(token):
+    #     return True
 
     if API_PERMISSIONS_CLAIM in token:
         return 'admin' in _formatted_list(token[API_PERMISSIONS_CLAIM])

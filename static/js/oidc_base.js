@@ -1,10 +1,10 @@
 var oktaSignIn = new OktaSignIn({ // Caution editing this section as you may break the demo.
-    baseUrl: 'https://[[org]]',
+    baseUrl: 'https://[[base_url]]',
     clientId: '[[aud]]',
     redirectUri: '[[redirect]]',
     authParams: {
-        issuer: 'https://[[org]]/oauth2/[[iss]]',
-        responseType: ['id_token', 'token'],
+        issuer: 'https://[[base_url]]/oauth2/[[iss]]',
+        responseType: ['id_token', 'token'], //this app requires either 1) 'token+token' or 2) just 'code'
         scopes: [[scopes]],
     },
     // Enable or disable widget functionality with the following options. Some of these features require additional configuration in your Okta admin settings. Detailed information can be found here: https://github.com/okta/okta-signin-widget#okta-sign-in-widget
@@ -18,8 +18,8 @@ var oktaSignIn = new OktaSignIn({ // Caution editing this section as you may bre
     	//callRecovery: true,                  // Enable voice call-based account recovery
     },
     // Look and feel changes
-    logo: '/static/img/gear_half.png',         // This demo includes other logos. Try: [logo_widgico.png, gear_logo.png, gear_half.png]
-    language: 'en',                            // Try: [fr, de, es, ja, zh-CN] Full list: https://github.com/okta/okta-signin-widget#language-and-text
+    logo: '[[base_icon]]',  // This demo includes other logos. Try: [logo_widgico.png, gear_logo.png, gear_half.png, okta32x32.png]
+    language: 'en',         // Try: [fr, de, es, ja, zh-CN] Full list: https://github.com/okta/okta-signin-widget#language-and-text
     i18n: {
         //Overrides default text when using English. Override other languages by adding additional sections.
         'en': {
@@ -29,7 +29,7 @@ var oktaSignIn = new OktaSignIn({ // Caution editing this section as you may bre
             //'primaryauth.password.tooltip': 'Your APIDemo Password', // Changes the tooltip for password
             // More e.g. [primaryauth.username.placeholder,  primaryauth.password.placeholder, needhelp, etc.]. Full list here: https://github.com/okta/okta-signin-widget/blob/master/packages/@okta/i18n/dist/properties/login.properties
         }
-    },
+    }
 });
 oktaSignIn.renderEl( //Caution editing this section as you may break the demo.
     {el: '#okta-login-container'},
@@ -44,7 +44,7 @@ oktaSignIn.renderEl( //Caution editing this section as you may break the demo.
             oktaSignIn.tokenManager.add(key, res[1]);
         }
         if (res.status === 'SUCCESS') {
-            post_tokens(oktaSignIn.tokenManager.get('idToken'), oktaSignIn.tokenManager.get('accessToken'));
+            login(oktaSignIn.tokenManager.get('idToken'), oktaSignIn.tokenManager.get('accessToken'));
         }
     }
 );

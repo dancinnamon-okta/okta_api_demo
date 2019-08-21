@@ -1,10 +1,8 @@
-var org = 'https://[[org]]';
-
 var options = {
-    url: org,
+    url: 'https://[[base_url]]',
     clientId: '[[aud]]',
     redirectUri: '[[redirect]]',
-    issuer: org + '/oauth2/[[iss]]'
+    issuer: 'https://[[base_url]]/oauth2/[[iss]]'
 }
 
 var authClient = new OktaAuth(options);
@@ -45,5 +43,5 @@ function showApp(res) {
         key = Object.keys(res[1])[0];
         authClient.tokenManager.add(key, res[1]);
     }
-    post_tokens(authClient.tokenManager.get('idToken'), authClient.tokenManager.get('accessToken'));
+    login(authClient.tokenManager.get('idToken'), authClient.tokenManager.get('accessToken'));
 }

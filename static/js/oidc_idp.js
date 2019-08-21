@@ -1,9 +1,9 @@
 var oktaSignIn = new OktaSignIn({
-    baseUrl: 'https://[[org]]',
+    baseUrl: 'https://[[base_url]]',
     clientId: '[[aud]]',
     redirectUri: '[[redirect]]',
     authParams: {
-        issuer: 'https://[[org]]/oauth2/[[iss]]',
+        issuer: 'https://[[base_url]]/oauth2/[[iss]]',
         display: 'popup',
         responseType: ['id_token', 'token'],
         scopes: [[scopes]],
@@ -27,7 +27,7 @@ oktaSignIn.renderEl(
             oktaSignIn.tokenManager.add(key, res[1]);
         }
         if (res.status === 'SUCCESS') {
-            post_tokens(oktaSignIn.tokenManager.get('idToken'), oktaSignIn.tokenManager.get('accessToken'));
+            login(oktaSignIn.tokenManager.get('idToken'), oktaSignIn.tokenManager.get('accessToken'));
         }
     }
 );

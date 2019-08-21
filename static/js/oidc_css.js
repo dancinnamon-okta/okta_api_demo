@@ -1,9 +1,9 @@
 var oktaSignIn = new OktaSignIn({
-    baseUrl: 'https://[[org]]',
+    baseUrl: 'https://[[base_url]]',
     clientId: '[[aud]]',
     redirectUri: '[[redirect]]',
     authParams: {
-        issuer: 'https://[[org]]/oauth2/[[iss]]',
+        issuer: 'https://[[base_url]]/oauth2/[[iss]]',
         responseType: ['id_token', 'token'],
         scopes: [[scopes]],
     },
@@ -16,7 +16,7 @@ var oktaSignIn = new OktaSignIn({
         //smsRecovery: true,
     	//callRecovery: true,
     },
-    logo: '/static/img/gear_half.png', //more:[logo_widgico.png, gear_logo.png, gear_half.png]
+    logo: '[[base_icon]]', //more:[logo_widgico.png, gear_logo.png, gear_half.png]
     language: 'en', //more: [fr, de, es, ja, zh-CN] Full list here: https://github.com/okta/okta-signin-widget#language-and-text
     i18n: {
         'en': {
@@ -39,7 +39,7 @@ oktaSignIn.renderEl(
             oktaSignIn.tokenManager.add(key, res[1]);
         }
         if (res.status === 'SUCCESS') {
-            post_tokens(oktaSignIn.tokenManager.get('idToken'), oktaSignIn.tokenManager.get('accessToken'));
+            login(oktaSignIn.tokenManager.get('idToken'), oktaSignIn.tokenManager.get('accessToken'));
         }
     }
 );

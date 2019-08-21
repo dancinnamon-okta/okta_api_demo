@@ -1,6 +1,6 @@
 var id_token_str = srv_id_token || '';
 var access_token_str = srv_access_token || '';
-var url = 'https://' + org;
+var baseUrl = 'https://' + base_url;
 
 var navbarApp = new Vue({
     delimiters: ['[[', ']]'],
@@ -75,11 +75,11 @@ Vue.filter('formatKey', function(value) {
 });
 
 var oktaSignIn = new OktaSignIn({
-    baseUrl: url,
+    baseUrl: baseUrl,
     clientId: aud,
     redirectUri: redirect_uri,
     authParams: {
-        issuer: url + '/oauth2/' + iss
+        issuer: baseUrl + '/oauth2/' + iss
     }
 });
 
@@ -113,7 +113,6 @@ function showToken() {
         profileApp.idTokenHeader = prettyPrint(window.atob(id_token_parts[0]));
         profileApp.idTokenBody = prettyPrint(window.atob(id_token_parts[1]));
     }
-
     profileApp.prfl = profileOverride();
     navbarApp.nameLabel = profileApp.prfl.name;
 
@@ -122,8 +121,11 @@ function showToken() {
     if (groupsList.includes("companyadmin")) {
         navbarApp.showAdminButton=true;
         navbarApp.isCompanyAdmin=true;
-    } else if (groupsList.includes("admin")){
+    }
+    // super-admin means not a company admin (super admin role overrides company admin)
+    if (groupsList.includes("admin")){
         navbarApp.showAdminButton=true;
+        navbarApp.isCompanyAdmin=false;
     }
     if (groupsList.includes("xfercash")) {
         navbarApp.showSensitiveButton=true;
@@ -131,7 +133,6 @@ function showToken() {
 
     if (profileApp.accessToken.user_context && profileApp.idToken.preferred_username != profileApp.accessToken.user_context.login)
         profileApp.impersonationMode = true;
-
 
     // After setting showAdminButton, we can set showDelegateButton
     if (!profileApp.impersonationMode) {
@@ -220,7 +221,7 @@ function determinePermissions() {
               perms.push({
                 'Name': 'Administrator',
                 'Criteria': 'Due to being assigned the Admin role',
-                'Desc': 'Can lookup users.'
+                'Desc': 'Is a super admin. Can manage all companies'
               })
             }
             else if(perm == 'companyadmin') {
@@ -248,7 +249,7 @@ function determinePermissions() {
 function showMyAppLinks(userId) {
     if (userId != null && userId != '') {
         $.ajax({
-            url: url + "/api/v1/users/" + userId + "/appLinks",
+            url: "https://" + org + "/api/v1/users/" + userId + "/appLinks",
             type: "GET",
             dataType: 'json',
             crossDomain: true,

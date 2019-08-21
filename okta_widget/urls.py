@@ -1,58 +1,49 @@
 from django.conf.urls import url
-from .views import not_authenticated
-from .views import not_authorized
-from .views import view_home, view_tokens, view_admin, view_debug
-from .api import list_users, list_user, setNameId, add_users, update_user
-from .api import app_schema, list_groups, list_perms, get_group, update_perm, add_group, transfer_money
-from .views import process_creds
-from .views import view_login, view_logout, view_login_auto, view_auth_groupadmin, view_profile, edit_profile
-from .views import oauth2_post, oauth2_callback
-from .views import registration_view, registration_view2, \
-    registration_success, registration_success2, \
-    activation_view, activation_wo_token_view
-from .views import view_login_css, okta_hosted_login, view_login_idp, view_login_disco, login_delegate
-from .views import view_login_custom
-from .views import view_sensitive_operations
-from .views import delegate_init
+from .api import *
+from .views import *
 
 urlpatterns = [
-    url(r'^admin/', view_admin, name='admin'),
-    url(r'^debug/', view_debug, name='debug'),
     url(r'^edit-profile/', edit_profile, name='edit-profile'),
 
     # home
     url(r'^$', view_home, name='home'),
     url(r'^tokens$', view_tokens, name='tokens'),
-    url(r'^login$', view_login, name='login'),
+    url(r'^login$', view_login, name='login_default'),
     url(r'^signin/reset-password/(?P<recoveryToken>.*)', view_login, name='reset_password'),
     url(r'^signin/recovery-question/(?P<recoveryToken>.*)', view_login, name='admin_reset_password'),
-    url(r'^logout$', view_logout, name='logout'),
     url(r'^login-noprompt', view_login_auto, name='login_noprompt'),
     url(r'^auth-groupadmin', view_auth_groupadmin, name='auth_groupadmin'),
+
+    # login
+    url(r'^logout$', view_logout, name='logout'),
+    url(r'^clear-session', clear_session, name='clear_session'),
 
     # profile page
     url(r'^profile$', view_profile, name='profile'),
 
     # admin/crud
+    url(r'^admin/', view_admin, name='admin'),
     url(r'^list-users', list_users, name='list_users'),
     url(r'^list-user', list_user, name='list_user'),
     url(r'^add-users', add_users, name='add_users'),
     url(r'^update-user', update_user, name='update_user'),
     url(r'^add-group', add_group, name='add_group'),
     url(r'^list-groups', list_groups, name='list_groups'),
-    url(r'^list-group', get_group, name='list_group'),
+    url(r'^list-group', get_group, name='list_group'),  # TODO: unused api. please cleanup
     url(r'^list-perms', list_perms, name='list_perms'),
     url(r'^app-schema', app_schema, name='app_schema'),
     url(r'^update-perm', update_perm, name='update_perm'),
 
+    # impersonation (Deprecated)
+    # url(r'^set-name-id', setNameId, name='set_name_id'),
+    # url(r'^login-delegate', login_delegate, name='login_delegate'),
+
     # impersonation
-    url(r'^set-name-id', setNameId, name='set_name_id'),
-    url(r'^login-delegate', login_delegate, name='login_delegate'),
     url(r'^delegate-init', delegate_init, name='delegate_init'),
 
     # alternate login pages
     url(r'^login-css$', view_login_css, name='login_css'),
-    url(r'^for-okta-hosted$', okta_hosted_login, name='okta_hosted_login'),
+    url(r'^for-okta-hosted$', okta_hosted_login, name='login_okta_hosted'),
     url(r'^login-idp$', view_login_idp, name='login_idp'),
     url(r'^login-disco', view_login_disco, name='login_idp_disco'),
     url(r'^login-form$', view_login_custom, name='login_custom'),
@@ -79,4 +70,8 @@ urlpatterns = [
     # Sensitive Access- Step-up MFA secured.
     url(r'^sensitive_operations/', view_sensitive_operations, name='sensitive_operations'),
     url(r'^transfer', transfer_money, name='transfer_money'),
+    
+    # health check
+    url(r'^health/$', health_check, name='health_check'),
+    url(r'^hello-redis/$', hello_redis, name='hello_redis'),
 ]

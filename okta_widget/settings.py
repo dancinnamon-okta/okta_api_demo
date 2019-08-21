@@ -19,15 +19,22 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '(7g9#++b(_&6#(la7we*xrx6&z=d#g7)oe7+lyrq&vsv6$b33#'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+DEBUG_SUBDOMAIN = os.environ.get('DEBUG_SUBDOMAIN')
+DEBUG_APP = os.environ.get('DEBUG_APP')
 
-ALLOWED_HOSTS = ['*']
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'not_a_secret_for_dev#!@12345'
+if os.environ.get('SECRET_KEY') is not None:
+    SECRET_KEY = os.environ['SECRET_KEY']
 
+ALLOWED_HOSTS = ['172.17.0.2','localhost', '127.0.0.1', '[::1]']
+if os.environ.get('ALLOWED_HOSTS') is not None:
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(',')
 
+UDP_BASE_URL = os.environ.get('UDP_BASE_URL')
+UDP_KEY = os.environ.get('UDP_KEY')
+URL = os.environ.get('URL')
 DEFAULT_PORT = os.environ.get('DEFAULT_PORT')
 OKTA_ORG = os.environ.get('OKTA_ORG')
 AUTH_SERVER_ID = os.environ.get('AUTH_SERVER_ID')
@@ -36,6 +43,7 @@ CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
 GOOGLE_IDP = os.environ.get('GOOGLE_IDP_ID')
 FB_IDP = os.environ.get('FB_IDP_ID')
 LNKD_IDP = os.environ.get('LNKD_IDP_ID')
+MSFT_IDP = os.environ.get('MSFT_IDP_ID')
 SAML_IDP = os.environ.get('SAML_IDP_ID')
 API_KEY = os.environ.get('API_KEY')
 CUSTOM_LOGIN_URL = os.environ.get('CUSTOM_LOGIN_URL')
@@ -46,31 +54,37 @@ BACKGROUND_IMAGE_DEFAULT = os.environ.get('BACKGROUND_IMAGE')
 BACKGROUND_IMAGE_CSS = os.environ.get('BACKGROUND_IMAGE_CSS')
 BACKGROUND_IMAGE_AUTHJS = os.environ.get('BACKGROUND_IMAGE_AUTHJS')
 BACKGROUND_IMAGE_IDP = os.environ.get('BACKGROUND_IMAGE_IDP')
+BACKGROUND_IMAGE_IDP_DISCO = os.environ.get('BACKGROUND_IMAGE_IDP_DISCO')
 REDIRECT_URI = os.environ.get('REDIRECT_URI')
 IDP_DISCO_PAGE = os.environ.get('IDP_DISCO_PAGE')
 LOGIN_NOPROMPT_BOOKMARK = os.environ.get('LOGIN_NOPROMPT_BOOKMARK')
-
 APP_PERMISSIONS_CLAIM = os.environ.get('APP_PERMISSIONS_CLAIM')
 API_PERMISSIONS_CLAIM = os.environ.get('API_PERMISSIONS_CLAIM')
 API_XFER_AUTH_CLAIM = os.environ.get('API_XFER_AUTH_CLAIM')
 XFER_AUTH_CLIENT_ID = os.environ.get('XFER_AUTH_CLIENT_ID')
-
-IMPERSONATION_VERSION = os.environ.get('IMPERSONATION_VERSION')
-IMPERSONATION_ORG = os.environ.get('IMPERSONATION_ORG')
-IMPERSONATION_ORG_AUTH_SERVER_ID = os.environ.get('IMPERSONATION_ORG_AUTH_SERVER_ID')
-IMPERSONATION_ORG_OIDC_CLIENT_ID = os.environ.get('IMPERSONATION_ORG_OIDC_CLIENT_ID')
-IMPERSONATION_ORG_REDIRECT_IDP_ID = os.environ.get('IMPERSONATION_ORG_REDIRECT_IDP_ID')
-IMPERSONATION_SAML_APP_ID = os.environ.get('IMPERSONATION_SAML_APP_ID')
-
-IMPERSONATION_V2_ORG = os.environ.get('IMPERSONATION_V2_ORG')
-IMPERSONATION_V2_SAML_APP_ID = os.environ.get('IMPERSONATION_V2_SAML_APP_ID')
-IMPERSONATION_V2_ORG_API_KEY = os.environ.get('IMPERSONATION_V2_ORG_API_KEY')
-IMPERSONATION_V2_SAML_APP_EMBED_LINK = os.environ.get('IMPERSONATION_V2_SAML_APP_EMBED_LINK')
-
 DELEGATION_SERVICE_ENDPOINT = os.environ.get('DELEGATION_SERVICE_ENDPOINT')
+REDIS_HOST = os.environ.get('REDIS_HOST')
+REDIS_PORT = os.environ.get('REDIS_PORT')
+if REDIS_HOST is None:
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+else:
+    SESSION_ENGINE = 'redis_sessions.session'
+if REDIS_PORT is None:
+    REDIS_PORT = 6379
+
+# IMPERSONATION_VERSION = os.environ.get('IMPERSONATION_VERSION')
+# IMPERSONATION_ORG = os.environ.get('IMPERSONATION_ORG')
+# IMPERSONATION_ORG_AUTH_SERVER_ID = os.environ.get('IMPERSONATION_ORG_AUTH_SERVER_ID')
+# IMPERSONATION_ORG_OIDC_CLIENT_ID = os.environ.get('IMPERSONATION_ORG_OIDC_CLIENT_ID')
+# IMPERSONATION_ORG_REDIRECT_IDP_ID = os.environ.get('IMPERSONATION_ORG_REDIRECT_IDP_ID')
+# IMPERSONATION_SAML_APP_ID = os.environ.get('IMPERSONATION_SAML_APP_ID')
+#
+# IMPERSONATION_V2_ORG = os.environ.get('IMPERSONATION_V2_ORG')
+# IMPERSONATION_V2_SAML_APP_ID = os.environ.get('IMPERSONATION_V2_SAML_APP_ID')
+# IMPERSONATION_V2_ORG_API_KEY = os.environ.get('IMPERSONATION_V2_ORG_API_KEY')
+# IMPERSONATION_V2_SAML_APP_EMBED_LINK = os.environ.get('IMPERSONATION_V2_SAML_APP_EMBED_LINK')
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -114,6 +128,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'okta_widget.wsgi.application'
 
+SESSION_COOKIE_AGE = 86400
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+SESSION_REDIS = {
+    'host': REDIS_HOST,
+    'port': REDIS_PORT,
+    'db': 0,
+    'password': '',
+    'prefix': 'session',
+    'socket_timeout': 1
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
@@ -165,8 +190,11 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+STATIC_URL = '/static/'
+STATIC_ROOT = "/var/www/unidemo/static/"
+
 CORS_URLS_REGEX = r'^/oauth/.*$'
 
 CORS_ORIGIN_ALLOW_ALL = False
 
-STATIC_URL = '/static/'
+
